@@ -1,0 +1,2535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fundamentals of Factor Investing: Size (Dow 30)</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+
+      --blue:#2563eb;   /* High-size */
+      --green:#16a34a;  /* Low-size */
+      --purple:#7c3aed; /* Long-short */
+      --orange:#f97316; /* Equal-weight */
+
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --ok:#22c55e;
+
+      --radius: 16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#ffffff 0%, var(--bg) 65%);
+    }
+    a{color:inherit}
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:24px 18px 60px;
+    }
+    header{
+      display:flex;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    h1{
+      margin:0;
+      font-size:26px;
+      letter-spacing:-.02em;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      justify-content:flex-end;
+    }
+    .ctrl{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      box-shadow:0 6px 20px rgba(15,23,42,.04);
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:160px;
+    }
+    .ctrl label{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .ctrl input, .ctrl select{
+      font:inherit;
+      font-size:13px;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      outline:none;
+      background:#fff;
+    }
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:var(--card);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(15,23,42,.04);
+      font-weight:600;
+      font-size:13px;
+    }
+    .btn.primary{
+      background:linear-gradient(180deg,#0ea5e9 0%, #2563eb 100%);
+      color:#fff;
+      border-color:transparent;
+    }
+    .btn.danger{
+      background:linear-gradient(180deg,#fb7185 0%, #ef4444 100%);
+      color:#fff;
+      border-color:transparent;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0 0 6px 0;
+      font-size:16px;
+      letter-spacing:-.01em;
+    }
+    .card .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+      margin-bottom:10px;
+    }
+    .kpis{
+      grid-column: 1 / -1;
+    }
+    .kpi-row{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+    }
+    .kpi{
+      grid-column: span 3;
+      background:linear-gradient(180deg,#ffffff 0%, #f8fafc 100%);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      box-shadow:0 6px 18px rgba(15,23,42,.05);
+    }
+    .kpi .label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:8px;
+    }
+    .pill{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill.ok{border-color:rgba(34,197,94,.35); color:#15803d; background:rgba(34,197,94,.08);}
+    .pill.warn{border-color:rgba(245,158,11,.35); color:#b45309; background:rgba(245,158,11,.10);}
+    .pill.danger{border-color:rgba(239,68,68,.35); color:#b91c1c; background:rgba(239,68,68,.08);}
+    .kpi .value{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+    .kpi .sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:6px;
+    }
+
+    section{
+      grid-column: 1 / -1;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .span-12{grid-column: span 12;}
+    .span-8{grid-column: span 8;}
+    .span-6{grid-column: span 6;}
+    .span-4{grid-column: span 4;}
+    .span-3{grid-column: span 3;}
+
+    .chart{
+      width:100%;
+      min-height:280px;
+    }
+    .chart.sm{min-height:240px}
+    .chart.lg{min-height:340px}
+
+    .table-wrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+    table{
+      border-collapse:separate;
+      border-spacing:0;
+      width:100%;
+      min-width:760px;
+      font-size:12px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      vertical-align:top;
+      white-space:nowrap;
+    }
+    th{
+      position:sticky;
+      top:0;
+      background:#f8fafc;
+      z-index:2;
+      font-size:12px;
+      color:#334155;
+    }
+    tbody tr:hover td{
+      background:#fafcff;
+    }
+    .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1;}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:11px;
+      color:var(--muted);
+      background:#fff;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;display:inline-block;
+      background:var(--muted);
+    }
+    .dot.ok{background:var(--ok)}
+    .dot.warn{background:var(--warn)}
+    .dot.danger{background:var(--danger)}
+
+    .callout{
+      border:1px dashed rgba(245,158,11,.55);
+      background:rgba(245,158,11,.08);
+      border-radius:14px;
+      padding:12px;
+      color:#7c2d12;
+      font-size:13px;
+      line-height:1.45;
+    }
+    .callout strong{color:#7c2d12}
+    .callout small{color:#9a3412}
+
+    .upload-grid{
+      display:grid;
+      grid-template-columns: repeat(12,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .u{
+      grid-column: span 4;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:linear-gradient(180deg,#ffffff 0%, #f8fafc 100%);
+    }
+    .u .title{
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .u .desc{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      margin-bottom:10px;
+    }
+    .u input[type="file"]{
+      width:100%;
+    }
+    .u textarea{
+      width:100%;
+      min-height:120px;
+      resize:vertical;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      font:inherit;
+      font-size:12px;
+      outline:none;
+      background:#fff;
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .legend-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .legend-item{display:flex; gap:8px; align-items:center}
+    .swatch{
+      width:10px;height:10px;border-radius:999px;display:inline-block;
+    }
+
+    .discussion{
+      font-size:13px;
+      line-height:1.55;
+      color:#0b1220;
+    }
+    .discussion ul{margin:8px 0 0 18px}
+    .discussion p{margin:10px 0}
+
+    .foot{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:10px;
+      line-height:1.4;
+    }
+
+    @media (max-width: 1050px){
+      .kpi{grid-column: span 6;}
+      .u{grid-column: span 6;}
+    }
+    @media (max-width: 720px){
+      .kpi{grid-column: span 12;}
+      .ctrl{min-width: 100%;}
+      .u{grid-column: span 12;}
+      table{min-width: 900px;}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">
+      <h1>Fundamentals of Factor Investing: Size</h1>
+      <div class="subtitle" id="subtitle">
+        Dataset period: <span class="mono" id="period">—</span> · Stocks retained: <span class="mono" id="retained">—</span> · Rebalancing: <span class="mono">Monthly</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span> High-size (Top 10)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--green)"></span> Low-size (Bottom 10)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--purple)"></span> Long-short (Low − High)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span> Equal-weight (1/N)</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="ctrl">
+        <label for="rfInput">Risk-free rate (annual, %)</label>
+        <input id="rfInput" type="number" step="0.01" value="0.00" />
+      </div>
+      <div class="ctrl">
+        <label for="dateStart">Date range start</label>
+        <input id="dateStart" type="date" />
+      </div>
+      <div class="ctrl">
+        <label for="dateEnd">Date range end</label>
+        <input id="dateEnd" type="date" />
+      </div>
+      <button class="btn primary" id="recomputeBtn">Recompute</button>
+      <button class="btn" id="exportMetricsBtn">Export metrics CSV</button>
+      <button class="btn danger" id="resetBtn">Reset to demo</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <article class="card kpis">
+      <h2>Summary KPIs</h2>
+      <div class="hint">Computed on monthly returns. Sharpe uses your risk-free input (annual). Max drawdown uses cumulative performance series.</div>
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="foot" id="dataStatusLine">Data status: —</div>
+    </article>
+
+    <article class="card span-12" id="ingestionCard">
+      <h2>Data ingestion (Frontend-only: 3 modes)</h2>
+      <div class="hint">
+        <strong>Mode A</strong> attempts auto-fetch (may fail due to CORS). If blocked, this dashboard automatically switches to <strong>Mode B</strong>.
+        <strong>Mode C</strong> always exists: built-in demo data so the page renders immediately.
+      </div>
+
+      <div id="corsWarning" class="callout" style="display:none; margin-bottom:10px;">
+        <strong>Auto-fetch blocked (likely CORS).</strong>
+        <div>Browsers often block direct Yahoo Finance & DividendMax requests from local HTML. The dashboard switched to <strong>Upload mode</strong> or will use <strong>DEMO DATA</strong> if nothing is provided.</div>
+        <small>Tip: Provide a wide prices CSV and a market cap snapshot CSV below. You can still complete the assignment fully without any backend.</small>
+      </div>
+
+      <div class="upload-grid">
+        <div class="u">
+          <div class="title">Mode A: Auto-fetch (best effort)</div>
+          <div class="desc">Attempts to download Yahoo Finance daily adjusted close (2010 → today) for current Dow 30 tickers and scrape DividendMax market caps.</div>
+          <button class="btn primary" id="autofetchBtn">Try auto-fetch</button>
+          <div class="foot muted" id="autofetchNote"></div>
+        </div>
+
+        <div class="u">
+          <div class="title">Mode B: Upload daily prices</div>
+          <div class="desc">
+            Upload either (1) one <strong>wide</strong> CSV: <span class="mono">Date, AAPL, MSFT, ...</span> (daily adjusted close),
+            or (2) <strong>multiple per-ticker</strong> CSVs (must include Date + Adj Close/Close).
+          </div>
+          <input type="file" id="pricesWideFile" accept=".csv" />
+          <div class="foot muted">Wide CSV input</div>
+          <input type="file" id="pricesMultiFiles" accept=".csv" multiple style="margin-top:10px;" />
+          <div class="foot muted">Multiple per-ticker CSVs</div>
+        </div>
+
+        <div class="u">
+          <div class="title">Mode B: Market cap snapshot</div>
+          <div class="desc">Upload a snapshot CSV: <span class="mono">Ticker, MarketCap</span>. MarketCap can be number or formatted (e.g., 1.23T, 450B, 12.4M).</div>
+          <input type="file" id="mcapFile" accept=".csv" />
+          <div class="foot muted">Used if DividendMax scraping fails</div>
+          <div class="desc" style="margin-top:10px;">Optional fallback: paste DividendMax HTML table (if you copied it manually).</div>
+          <textarea id="mcapHtmlPaste" placeholder="Paste DividendMax table HTML here (optional)..."></textarea>
+          <button class="btn" id="parseMcapHtmlBtn" style="margin-top:8px;">Parse pasted HTML</button>
+        </div>
+
+        <div class="u">
+          <div class="title">Mode B: Optional Dow tickers list</div>
+          <div class="desc">Optional CSV: <span class="mono">Ticker</span>. If omitted, the default embedded Dow 30 list is used.</div>
+          <input type="file" id="tickersFile" accept=".csv" />
+          <div class="foot muted">Optional</div>
+        </div>
+
+        <div class="u">
+          <div class="title">Mode C: Demo dataset</div>
+          <div class="desc">Built-in small dataset (6 tickers, a few months). Clearly labeled in the UI. Use Reset to demo anytime.</div>
+          <span class="tag"><span class="dot warn"></span> DEMO DATA always available</span>
+        </div>
+
+        <div class="u">
+          <div class="title">Run pipeline</div>
+          <div class="desc">After uploads (or auto-fetch), run the full assignment pipeline: align series, filter full history, build size portfolios, metrics, charts, discussion.</div>
+          <button class="btn primary" id="runBtn">Run analysis</button>
+          <div class="foot muted" id="runNote"></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 1 -->
+    <section aria-label="Section 1: Data & Universe Integrity">
+      <article class="card span-12">
+        <h2>Section 1 — Data & Universe Integrity</h2>
+        <div class="hint">Universe filtering: keep only tickers with complete daily history over the chosen sample window (default: Jan 2010 → latest available) and synchronized time series.</div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table id="universeTable">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Company (optional)</th>
+                <th>Has full history?</th>
+                <th>Removed reason</th>
+                <th>First date</th>
+                <th>Last date</th>
+                <th>Obs (daily)</th>
+                <th>Missing days</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Missing data justification</h2>
+        <div class="hint">Bar chart: number of missing observations vs. the aligned reference calendar (higher = worse). In Demo mode: derived from demo calendar.</div>
+        <div id="missingBar" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Price coverage timeline</h2>
+        <div class="hint">Coverage (first-to-last date) per ticker. This helps justify exclusions when history does not span the full window.</div>
+        <div id="coverageTimeline" class="chart sm"></div>
+      </article>
+    </section>
+
+    <!-- Section 2 -->
+    <section aria-label="Section 2: Market Cap / Size Construction">
+      <article class="card span-12">
+        <h2>Section 2 — Market Cap / Size Construction</h2>
+        <div class="hint">
+          Market cap source: <span id="mcapSource">—</span>. Snapshot is assumed valid for the latest date. Shares outstanding are inferred as:
+          <span class="mono">shares = market_cap_latest / price_latest</span>, assumed constant over time, so <span class="mono">mcap_t = price_t × shares</span>.
+        </div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table id="mcapTable">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>MarketCap snapshot</th>
+                <th>Last price</th>
+                <th>Implied shares outstanding</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Market cap distribution</h2>
+        <div class="hint">Histogram of log10(market cap) snapshot values (where available).</div>
+        <div id="mcapDist" class="chart sm"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Top 10 by size (snapshot)</h2>
+        <div class="hint">Largest 10 market caps from the snapshot.</div>
+        <div id="mcapTop10" class="chart sm"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Size rank lines (subset)</h2>
+        <div class="hint">Rank (1 = largest) over time for a subset (top 6 snapshot). Ranks are recomputed monthly using inferred market cap history.</div>
+        <div id="rankLines" class="chart sm"></div>
+      </article>
+    </section>
+
+    <!-- Section 3 -->
+    <section aria-label="Section 3: Monthly Returns">
+      <article class="card span-6">
+        <h2>Section 3 — Monthly Returns</h2>
+        <div class="hint">Monthly prices use the <strong>last trading day</strong> in each month. Monthly return: <span class="mono">P_t / P_{t-1} − 1</span>.</div>
+        <div id="retHistAll" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Cross-sectional mean & dispersion</h2>
+        <div class="hint">Time series of cross-sectional mean monthly return and dispersion (std across stocks).</div>
+        <div id="csMeanDisp" class="chart sm"></div>
+      </article>
+    </section>
+
+    <!-- Section 4 -->
+    <section aria-label="Section 4: Size Portfolios">
+      <article class="card span-12">
+        <h2>Section 4 — Size Portfolios (Monthly Rebalanced)</h2>
+        <div class="hint">
+          Sorting at each month-end using inferred market cap. Buckets: High-size = top 10; Low-size = bottom 10. <strong>Equal-weight</strong> within each bucket. Returns are applied to the <strong>next month</strong>.
+        </div>
+      </article>
+
+      <article class="card span-8">
+        <h2>Cumulative returns (Low vs High vs EW)</h2>
+        <div class="hint">Cumulative performance computed from monthly returns; portfolios always visible. You can toggle individual stocks below (portfolios remain fixed).</div>
+        <div id="cumReturns" class="chart lg"></div>
+        <div class="foot muted" id="toggleNote"></div>
+        <div class="legend-row" id="stockToggles"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Growth of $10,000</h2>
+        <div class="hint">Growth trajectories for Low / High / Equal-weight.</div>
+        <div id="growth10k" class="chart lg"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Annual returns</h2>
+        <div class="hint">Calendar-year returns derived from monthly returns.</div>
+        <div id="annualBars" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Drawdowns</h2>
+        <div class="hint">Drawdown series for Low / High / Equal-weight portfolios.</div>
+        <div id="drawdowns" class="chart sm"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Rolling 12m return</h2>
+        <div class="hint">12-month rolling total return for Low / High / Equal-weight.</div>
+        <div id="rollRet" class="chart sm"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Rolling volatility</h2>
+        <div class="hint">Rolling 12m annualized vol: std(monthly) × sqrt(12).</div>
+        <div id="rollVol" class="chart sm"></div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Rolling Sharpe</h2>
+        <div class="hint">Rolling 12m Sharpe using risk-free input (annual) converted to monthly.</div>
+        <div id="rollSharpe" class="chart sm"></div>
+      </article>
+
+      <article class="card span-12">
+        <h2>Latest month holdings (equal-weight buckets)</h2>
+        <div class="hint">Top 10 (High) and bottom 10 (Low) by size at the most recent month-end, with market caps and equal weights.</div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table id="holdingsTable">
+            <thead>
+              <tr>
+                <th>Bucket</th>
+                <th>Ticker</th>
+                <th>Market cap (month-end)</th>
+                <th>Weight</th>
+                <th>Rank (1 = largest)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- Section 5 -->
+    <section aria-label="Section 5: Long-Short Size Factor">
+      <article class="card span-12">
+        <h2>Section 5 — Long-Short Size Factor (Low − High)</h2>
+        <div class="hint">Long the small (Low-size) portfolio and short the big (High-size) portfolio. Monthly rebalanced. Return: <span class="mono">LS = Low − High</span>.</div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Long-short cumulative return</h2>
+        <div id="lsCum" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Long-short drawdown</h2>
+        <div id="lsDD" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>Long-short monthly return bars</h2>
+        <div id="lsBars" class="chart sm"></div>
+      </article>
+
+      <article class="card span-6">
+        <h2>LS monthly return distribution</h2>
+        <div id="lsHist" class="chart sm"></div>
+      </article>
+
+      <article class="card span-12">
+        <h2>Rolling 12m LS return</h2>
+        <div class="hint">12-month rolling compounded return for the long-short portfolio.</div>
+        <div id="lsRoll" class="chart sm"></div>
+      </article>
+    </section>
+
+    <!-- Section 6 -->
+    <section aria-label="Section 6: Performance Metrics Table">
+      <article class="card span-8">
+        <h2>Section 6 — Performance Metrics (Monthly)</h2>
+        <div class="hint">
+          Metrics: annualized return (compounded), annualized vol, Sharpe, skewness, kurtosis (excess kurtosis), plus Max Drawdown / Sortino / Calmar (bonus).
+        </div>
+        <div class="table-wrap" style="margin-top:10px;">
+          <table id="metricsTable">
+            <thead>
+              <tr>
+                <th>Portfolio</th>
+                <th>Ann. Return</th>
+                <th>Ann. Vol</th>
+                <th>Sharpe</th>
+                <th>Skew</th>
+                <th>Kurtosis (excess)</th>
+                <th>Max Drawdown</th>
+                <th>Sortino</th>
+                <th>Calmar</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card span-4">
+        <h2>Metrics radar (normalized)</h2>
+        <div class="hint">Normalized comparison across key metrics (higher is better for Return/Sharpe; lower is better for Vol/Drawdown).</div>
+        <div id="radar" class="chart sm"></div>
+      </article>
+    </section>
+
+    <!-- Section 7 -->
+    <section aria-label="Section 7: Discussion / Interpretation">
+      <article class="card span-12">
+        <h2>Section 7 — Discussion / Interpretation</h2>
+        <div class="hint">This text block auto-fills using computed results to provide an academically styled interpretation of the size factor.</div>
+        <div class="discussion" id="discussion"></div>
+        <div class="foot">
+          Assumptions implemented: market cap snapshot fixed at last date; shares outstanding constant over time; survivorship bias possible (current Dow constituents); transaction costs and shorting frictions ignored.
+        </div>
+      </article>
+    </section>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   Size Factor Investing Dashboard — Single-file Frontend
+   Implements:
+   - Mode A: best-effort auto-fetch Yahoo + scrape DividendMax
+   - Mode B: user uploads (wide or multiple per-ticker) + market cap CSV or pasted HTML
+   - Mode C: built-in demo dataset fallback
+   Quant pipeline:
+   parsePrices(), parseMarketCaps(), alignTimeSeries(), toMonthly(),
+   buildMarketCapHistory(), buildSizePortfolios(), calcMetrics(), renderCharts()
+   ========================================================= */
+
+/** ---------- Global app state ---------- */
+const STATE = {
+  mode: "DEMO", // "AUTO" | "UPLOAD" | "DEMO"
+  tickers: [],
+  companies: {}, // optional names
+  daily: {
+    dates: [], // ISO strings
+    prices: {} // ticker -> array aligned to dates (number or null)
+  },
+  marketCaps: {}, // ticker -> snapshot market cap (number)
+  monthly: {
+    dates: [],      // month-end date ISO
+    prices: {},     // ticker -> month-end prices array
+    returns: {},    // ticker -> monthly returns array (len = dates.length-1 typically)
+  },
+  mcapHist: { // month-end market caps
+    dates: [],
+    caps: {} // ticker -> month-end mcap array aligned to monthly dates
+  },
+  portfolios: {
+    dates: [], // return dates (aligned to monthly returns timeline)
+    high: [], low: [], ls: [], ew: [],
+    cum: { high: [], low: [], ls: [], ew: [] },
+    dd:  { high: [], low: [], ls: [], ew: [] },
+    holdingsLatest: { high: [], low: [] } // arrays of {ticker, mcap, weight, rank}
+  },
+  metrics: {}, // portfolio -> metrics object
+  ui: {
+    stockVisible: {}, // ticker -> boolean (for overlay chart toggles)
+  },
+  warnings: [],
+  sources: {
+    mcap: "—"
+  }
+};
+
+const COLORS = {
+  high: getCssVar("--blue"),
+  low: getCssVar("--green"),
+  ls: getCssVar("--purple"),
+  ew: getCssVar("--orange")
+};
+
+let CHARTS = {}; // apex chart instances
+
+/** ---------- Default Dow 30 tickers (current list can change over time; embed as assignment default) ---------- */
+const DEFAULT_DOW_30 = [
+  "AAPL","AMGN","AXP","BA","CAT","CRM","CSCO","CVX","DIS","DOW",
+  "GS","HD","HON","IBM","INTC","JNJ","JPM","KO","MCD","MMM",
+  "MRK","MSFT","NKE","PG","TRV","UNH","V","VZ","WBA","WMT"
+];
+
+/** ---------- DEMO dataset (Mode C) ---------- */
+const DEMO = (function buildDemo(){
+  // 6 tickers, a few months daily-ish (sparse but aligned) — enough to render everything.
+  const tickers = ["AAPL","MSFT","JNJ","JPM","KO","WMT"];
+  const dates = [];
+  const start = new Date("2022-01-03");
+  const end   = new Date("2022-08-31");
+  for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+    const day = d.getDay();
+    if(day===0 || day===6) continue; // weekends
+    dates.push(d.toISOString().slice(0,10));
+  }
+  function genPath(seed, drift){
+    let x = 100 + seed;
+    const arr = [];
+    for(let i=0;i<dates.length;i++){
+      const noise = (Math.sin(i/7 + seed)*0.5 + (Math.random()-0.5)*1.2);
+      x = Math.max(5, x * (1 + drift/252 + noise/100));
+      arr.push(+x.toFixed(2));
+    }
+    return arr;
+  }
+  const prices = {
+    AAPL: genPath(2, 0.10),
+    MSFT: genPath(4, 0.11),
+    JNJ:  genPath(6, 0.06),
+    JPM:  genPath(8, 0.07),
+    KO:   genPath(10,0.05),
+    WMT:  genPath(12,0.06)
+  };
+  const marketCaps = {
+    AAPL: 2.6e12,
+    MSFT: 2.2e12,
+    JNJ:  0.45e12,
+    JPM:  0.40e12,
+    KO:   0.28e12,
+    WMT:  0.42e12
+  };
+  const companies = {AAPL:"Apple",MSFT:"Microsoft",JNJ:"Johnson & Johnson",JPM:"JPMorgan",KO:"Coca-Cola",WMT:"Walmart"};
+  return {tickers, dates, prices, marketCaps, companies};
+})();
+
+/** =========================================================
+    Utilities
+   ========================================================= */
+function getCssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function fmtPct(x){
+  if(!isFinite(x)) return "—";
+  return (x*100).toFixed(2) + "%";
+}
+function fmtNum(x, digits=2){
+  if(x===null || x===undefined || !isFinite(x)) return "—";
+  return x.toLocaleString(undefined,{maximumFractionDigits:digits});
+}
+function fmtUSD(x){
+  if(!isFinite(x)) return "—";
+  const abs = Math.abs(x);
+  if(abs>=1e12) return (x/1e12).toFixed(2)+"T";
+  if(abs>=1e9)  return (x/1e9).toFixed(2)+"B";
+  if(abs>=1e6)  return (x/1e6).toFixed(2)+"M";
+  if(abs>=1e3)  return (x/1e3).toFixed(2)+"K";
+  return x.toFixed(0);
+}
+function clamp(x,a,b){ return Math.max(a, Math.min(b,x)); }
+
+function parseMarketCapValue(v){
+  // Accept: 1234567890, "1.23T", "450B", "12.4M", "8,120,000,000"
+  if(v===null || v===undefined) return NaN;
+  if(typeof v === "number") return v;
+  let s = String(v).trim();
+  if(!s) return NaN;
+  s = s.replace(/\$/g,"").replace(/,/g,"").replace(/\s+/g,"");
+  const m = s.match(/^(-?\d+(\.\d+)?)([TtBbMmKk])?$/);
+  if(!m) return Number(s);
+  const num = Number(m[1]);
+  const suf = (m[3]||"").toUpperCase();
+  const mult = suf==="T"?1e12 : suf==="B"?1e9 : suf==="M"?1e6 : suf==="K"?1e3 : 1;
+  return num*mult;
+}
+
+function toISODate(d){
+  const x = new Date(d);
+  if(Number.isNaN(+x)) return null;
+  return x.toISOString().slice(0,10);
+}
+
+function unique(arr){
+  return Array.from(new Set(arr));
+}
+
+function mean(arr){
+  const xs = arr.filter(v=>isFinite(v));
+  if(xs.length===0) return NaN;
+  return xs.reduce((a,b)=>a+b,0)/xs.length;
+}
+function stdev(arr){
+  const xs = arr.filter(v=>isFinite(v));
+  if(xs.length<2) return NaN;
+  const m = mean(xs);
+  const v = xs.reduce((a,b)=>a+(b-m)*(b-m),0)/(xs.length-1);
+  return Math.sqrt(v);
+}
+function skewness(arr){
+  const xs = arr.filter(v=>isFinite(v));
+  const n = xs.length;
+  if(n<3) return NaN;
+  const m = mean(xs);
+  const s = stdev(xs);
+  if(!isFinite(s) || s===0) return NaN;
+  const sum3 = xs.reduce((a,x)=>a+Math.pow((x-m)/s,3),0);
+  // sample skewness (Fisher-Pearson)
+  return (n/((n-1)*(n-2))) * sum3;
+}
+function kurtosisExcess(arr){
+  const xs = arr.filter(v=>isFinite(v));
+  const n = xs.length;
+  if(n<4) return NaN;
+  const m = mean(xs);
+  const s = stdev(xs);
+  if(!isFinite(s) || s===0) return NaN;
+  const sum4 = xs.reduce((a,x)=>a+Math.pow((x-m)/s,4),0);
+  // sample excess kurtosis (unbiased-ish)
+  const g2 = (n*(n+1)/((n-1)*(n-2)*(n-3))) * sum4 - (3*(n-1)*(n-1))/((n-2)*(n-3));
+  return g2;
+}
+
+function cumprodFromReturns(rets){
+  // rets: array of monthly returns; returns cumulative wealth index starting at 1 (same length as rets)
+  let w = 1;
+  const out = [];
+  for(const r of rets){
+    if(!isFinite(r)) { out.push(out.length?out[out.length-1]:1); continue; }
+    w *= (1+r);
+    out.push(w);
+  }
+  return out;
+}
+
+function drawdownFromWealth(wealth){
+  // wealth: array, >0
+  let peak = -Infinity;
+  const dd = [];
+  for(const w of wealth){
+    peak = Math.max(peak, w);
+    dd.push(peak>0 ? (w/peak - 1) : 0);
+  }
+  return dd;
+}
+
+function annualizeReturnFromMonthly(rets){
+  // compounded annual return from monthly series
+  const xs = rets.filter(v=>isFinite(v));
+  if(xs.length===0) return NaN;
+  const total = xs.reduce((a,r)=>a*(1+r),1);
+  const years = xs.length/12;
+  if(years<=0) return NaN;
+  return Math.pow(total, 1/years) - 1;
+}
+function annualizeVolFromMonthly(rets){
+  const s = stdev(rets);
+  if(!isFinite(s)) return NaN;
+  return s*Math.sqrt(12);
+}
+function maxDrawdown(rets){
+  const wealth = cumprodFromReturns(rets);
+  const dd = drawdownFromWealth(wealth);
+  let m = 0;
+  for(const x of dd) if(isFinite(x)) m = Math.min(m, x);
+  return m;
+}
+function sortinoRatio(rets, rfAnnual=0){
+  const xs = rets.filter(v=>isFinite(v));
+  if(xs.length<2) return NaN;
+  const rfM = Math.pow(1+rfAnnual,1/12)-1;
+  const excess = xs.map(r=>r-rfM);
+  const m = mean(excess);
+  const downside = excess.map(x=>Math.min(0,x));
+  const ds = stdev(downside); // std of negative deviations (includes zeros)
+  if(!isFinite(ds) || ds===0) return NaN;
+  return (m*12)/(ds*Math.sqrt(12)); // annualize numerator ~ mean*12 and denom *sqrt(12)
+}
+function calmarRatio(rets){
+  const ar = annualizeReturnFromMonthly(rets);
+  const mdd = Math.abs(maxDrawdown(rets));
+  if(!isFinite(ar) || !isFinite(mdd) || mdd===0) return NaN;
+  return ar/mdd;
+}
+
+function corr(a,b){
+  const n = Math.min(a.length,b.length);
+  const xs=[], ys=[];
+  for(let i=0;i<n;i++){
+    if(isFinite(a[i]) && isFinite(b[i])) { xs.push(a[i]); ys.push(b[i]); }
+  }
+  if(xs.length<3) return NaN;
+  const mx = mean(xs), my = mean(ys);
+  let num=0, dx=0, dy=0;
+  for(let i=0;i<xs.length;i++){
+    const x=xs[i]-mx, y=ys[i]-my;
+    num += x*y; dx += x*x; dy += y*y;
+  }
+  const den = Math.sqrt(dx*dy);
+  return den===0?NaN:num/den;
+}
+function averageCorrelation(returnsByTicker){
+  const tks = Object.keys(returnsByTicker);
+  if(tks.length<2) return NaN;
+  let sum=0, cnt=0;
+  for(let i=0;i<tks.length;i++){
+    for(let j=i+1;j<tks.length;j++){
+      const c = corr(returnsByTicker[tks[i]], returnsByTicker[tks[j]]);
+      if(isFinite(c)){ sum+=c; cnt++; }
+    }
+  }
+  return cnt? sum/cnt : NaN;
+}
+
+function downloadText(filename, text){
+  const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** =========================================================
+    Parsing & Ingestion
+   ========================================================= */
+
+async function parseCSVFile(file){
+  return new Promise((resolve,reject)=>{
+    Papa.parse(file,{
+      header:true,
+      skipEmptyLines:true,
+      dynamicTyping:false,
+      complete: (res)=> resolve(res.data),
+      error: (err)=> reject(err)
+    });
+  });
+}
+
+function parsePricesWide(rows){
+  // Expect columns: Date, TICKER1, TICKER2, ...
+  // Output: {dates:[...], prices:{ticker:[... aligned]}, tickers:[...]}
+  const cols = rows.length ? Object.keys(rows[0]) : [];
+  const dateCol = cols.find(c=>c.toLowerCase()==="date") || cols[0];
+  const tickers = cols.filter(c=>c!==dateCol).map(c=>c.trim()).filter(Boolean);
+  const dates = [];
+  const prices = {};
+  tickers.forEach(t=> prices[t] = []);
+  for(const r of rows){
+    const d = toISODate(r[dateCol]);
+    if(!d) continue;
+    dates.push(d);
+    for(const t of tickers){
+      const v = r[t];
+      const num = (v===null||v===undefined||v==="") ? null : Number(String(v).replace(/,/g,""));
+      prices[t].push(isFinite(num)? num : null);
+    }
+  }
+  // sort by date ascending
+  const idx = dates.map((d,i)=>({d,i})).sort((a,b)=>a.d.localeCompare(b.d)).map(o=>o.i);
+  const dates2 = idx.map(i=>dates[i]);
+  const prices2 = {};
+  for(const t of tickers){
+    prices2[t] = idx.map(i=>prices[t][i]);
+  }
+  return {dates:dates2, prices:prices2, tickers};
+}
+
+function detectTickerFromFilename(name){
+  // common pattern: TICKER.csv or ..._TICKER.csv
+  const base = name.replace(/\.[^.]+$/,"");
+  const m = base.match(/([A-Z]{1,5})$/);
+  return m ? m[1] : null;
+}
+
+function parsePricesPerTicker(filesData){
+  // filesData: [{name, rows}]
+  // Each rows expected: Date + Adj Close or Close (Yahoo style)
+  // Merge into aligned wide daily series by date.
+  const per = [];
+  for(const {name, rows} of filesData){
+    if(!rows.length) continue;
+    const cols = Object.keys(rows[0]).map(c=>c.trim());
+    const dateCol = cols.find(c=>c.toLowerCase()==="date") || cols[0];
+    const adjCol = cols.find(c=>c.toLowerCase()==="adj close") || cols.find(c=>c.toLowerCase()==="adjclose");
+    const closeCol = cols.find(c=>c.toLowerCase()==="close");
+    const priceCol = adjCol || closeCol;
+    if(!priceCol) continue;
+    const tk = (rows[0]["Ticker"] || rows[0]["ticker"] || detectTickerFromFilename(name) || "").toString().trim().toUpperCase();
+    if(!tk) continue;
+    const map = new Map();
+    for(const r of rows){
+      const d = toISODate(r[dateCol]);
+      if(!d) continue;
+      const v = r[priceCol];
+      const num = (v===null||v===undefined||v==="") ? null : Number(String(v).replace(/,/g,""));
+      map.set(d, isFinite(num)? num : null);
+    }
+    per.push({ticker:tk, map});
+  }
+  const tickers = per.map(p=>p.ticker);
+  const allDates = unique(per.flatMap(p=>Array.from(p.map.keys()))).sort();
+  const prices = {};
+  for(const p of per){
+    prices[p.ticker] = allDates.map(d=>p.map.get(d) ?? null);
+  }
+  return {dates: allDates, prices, tickers};
+}
+
+function parseMarketCapsCSV(rows){
+  // Expect columns: Ticker, MarketCap
+  if(!rows.length) return {};
+  const cols = Object.keys(rows[0]);
+  const tCol = cols.find(c=>c.toLowerCase()==="ticker") || cols[0];
+  const mCol = cols.find(c=>c.toLowerCase().includes("marketcap")) || cols[1];
+  const out = {};
+  for(const r of rows){
+    const t = String(r[tCol]??"").trim().toUpperCase();
+    if(!t) continue;
+    const v = parseMarketCapValue(r[mCol]);
+    if(isFinite(v)) out[t] = v;
+  }
+  return out;
+}
+
+function parseDividendMaxHTMLTable(html){
+  // Very robust-ish: find table rows with ticker + market cap text.
+  // DividendMax markup can change; this is a best-effort parser.
+  const out = {};
+  try{
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if(!table) return out;
+    const rows = Array.from(table.querySelectorAll("tr"));
+    for(const tr of rows){
+      const tds = Array.from(tr.querySelectorAll("td"));
+      if(tds.length<2) continue;
+      const txts = tds.map(td=>td.textContent.trim());
+      const maybeTicker = (txts[0]||"").toUpperCase().replace(/[^A-Z.]/g,"");
+      // try to find market cap in row:
+      const capCell = txts.find(s=>/[0-9]/.test(s) && /[TBMK]/i.test(s)) || txts[txts.length-1];
+      const cap = parseMarketCapValue(capCell);
+      if(maybeTicker && isFinite(cap)) out[maybeTicker] = cap;
+    }
+  }catch(e){
+    console.warn("HTML parse error", e);
+  }
+  return out;
+}
+
+/** =========================================================
+    Mode A: Auto-fetch (best effort, may fail by CORS)
+   ========================================================= */
+
+function yahooCSVUrl(ticker, startUnix, endUnix){
+  // Query1 endpoint frequently CORS-blocked in browsers. Best effort only.
+  // We'll request "events=history&includeAdjustedClose=true"
+  const p = new URLSearchParams({
+    period1: String(startUnix),
+    period2: String(endUnix),
+    interval: "1d",
+    events: "history",
+    includeAdjustedClose: "true"
+  });
+  return `https://query1.finance.yahoo.com/v7/finance/download/${encodeURIComponent(ticker)}?${p.toString()}`;
+}
+
+async function tryFetchYahooPrices(tickers){
+  const start = Math.floor(new Date("2010-01-01T00:00:00Z").getTime()/1000);
+  const end   = Math.floor(Date.now()/1000);
+  const filesData = [];
+  for(const tk of tickers){
+    const url = yahooCSVUrl(tk, start, end);
+    const res = await fetch(url, {mode:"cors"});
+    if(!res.ok) throw new Error(`Fetch failed for ${tk}: ${res.status}`);
+    const text = await res.text();
+    const parsed = Papa.parse(text, {header:true, skipEmptyLines:true});
+    filesData.push({name:`${tk}.csv`, rows: parsed.data});
+  }
+  const merged = parsePricesPerTicker(filesData);
+  return merged;
+}
+
+async function tryScrapeDividendMax(){
+  // Likely CORS blocked. Best effort.
+  const url = "https://www.dividendmax.com/market-index-constituents/dow-jones-30";
+  const res = await fetch(url, {mode:"cors"});
+  if(!res.ok) throw new Error(`DividendMax fetch failed: ${res.status}`);
+  const html = await res.text();
+  const caps = parseDividendMaxHTMLTable(html);
+  if(Object.keys(caps).length<5) throw new Error("DividendMax parse returned too few rows.");
+  return caps;
+}
+
+/** =========================================================
+    Alignment + Monthly conversion
+   ========================================================= */
+
+function alignTimeSeries(dates, pricesByTicker, tickers){
+  // Ensure synchronized time series:
+  // - Use the common date calendar across all tickers with non-null prices
+  // - Remove tickers lacking full history (no missing) over target window
+  // Here we build a reference calendar from all dates and then determine missing per ticker.
+  const out = {
+    dates: dates.slice(),
+    prices: {},
+    tickers: tickers.slice(),
+    integrity: [] // per ticker stats for Section 1
+  };
+
+  // Determine missing counts and spans
+  const n = dates.length;
+  let globalFirst = dates[0];
+  let globalLast = dates[n-1];
+
+  for(const tk of tickers){
+    const arr = pricesByTicker[tk] || [];
+    let firstIdx = -1, lastIdx = -1, missing = 0, obs = 0;
+    for(let i=0;i<n;i++){
+      const v = arr[i];
+      if(isFinite(v)){
+        obs++;
+        if(firstIdx===-1) firstIdx = i;
+        lastIdx = i;
+      }else{
+        missing++;
+      }
+    }
+    const hasSpan = (firstIdx===0 && lastIdx===n-1);
+    const hasFull = (missing===0);
+    const removedReason = hasFull ? "" : (!hasSpan ? "Does not span full sample window" : "Missing values within window");
+    out.integrity.push({
+      ticker: tk,
+      company: STATE.companies[tk] || "",
+      hasFull,
+      reason: hasFull ? "" : removedReason,
+      firstDate: firstIdx>=0 ? dates[firstIdx] : "—",
+      lastDate: lastIdx>=0 ? dates[lastIdx] : "—",
+      obs,
+      missing
+    });
+    if(hasFull) out.prices[tk] = arr.map(v=>Number(v));
+  }
+
+  out.tickers = out.integrity.filter(r=>r.hasFull).map(r=>r.ticker);
+  return out;
+}
+
+function filterByDateRange(dates, pricesByTicker, tickers, startISO, endISO){
+  const s = startISO ? startISO : dates[0];
+  const e = endISO ? endISO : dates[dates.length-1];
+  const idx = [];
+  for(let i=0;i<dates.length;i++){
+    if(dates[i] >= s && dates[i] <= e) idx.push(i);
+  }
+  const dates2 = idx.map(i=>dates[i]);
+  const prices2 = {};
+  for(const tk of tickers){
+    const arr = pricesByTicker[tk] || [];
+    prices2[tk] = idx.map(i=>arr[i]);
+  }
+  return {dates:dates2, prices:prices2, tickers};
+}
+
+function toMonthly(datesDaily, pricesDailyByTicker, tickers){
+  // month-end prices:
+  // - for each month, pick last available daily price (month-end trading day)
+  const monthEndIdx = [];
+  for(let i=0;i<datesDaily.length;i++){
+    const cur = datesDaily[i].slice(0,7);
+    const next = (i<datesDaily.length-1) ? datesDaily[i+1].slice(0,7) : null;
+    if(cur !== next) monthEndIdx.push(i);
+  }
+  const mDates = monthEndIdx.map(i=>datesDaily[i]);
+  const mPrices = {};
+  for(const tk of tickers){
+    const arr = pricesDailyByTicker[tk];
+    mPrices[tk] = monthEndIdx.map(i=>arr[i]);
+  }
+  // monthly returns: aligned to mDates[1..]
+  const mRets = {};
+  for(const tk of tickers){
+    const p = mPrices[tk];
+    const rets = [];
+    for(let i=1;i<p.length;i++){
+      const r = (isFinite(p[i]) && isFinite(p[i-1]) && p[i-1]!==0) ? (p[i]/p[i-1]-1) : NaN;
+      rets.push(r);
+    }
+    mRets[tk] = rets;
+  }
+  return {dates: mDates, prices: mPrices, returns: mRets};
+}
+
+/** =========================================================
+    Market cap history construction
+   ========================================================= */
+
+function buildMarketCapHistory(mDates, mPricesByTicker, tickers, marketCapsSnapshot){
+  // shares = mcap_last / price_last (latest month-end price)
+  // mcap_t = price_t * shares
+  const caps = {};
+  const sharesOut = {};
+  const notes = {};
+  for(const tk of tickers){
+    const snap = marketCapsSnapshot[tk];
+    const p = mPricesByTicker[tk];
+    const lastPrice = p[p.length-1];
+    if(isFinite(snap) && isFinite(lastPrice) && lastPrice>0){
+      const shares = snap/lastPrice;
+      sharesOut[tk] = shares;
+      caps[tk] = p.map(px => isFinite(px) ? px*shares : NaN);
+      notes[tk] = "";
+    }else{
+      sharesOut[tk] = NaN;
+      caps[tk] = p.map(_=>NaN);
+      notes[tk] = !isFinite(snap) ? "No market cap snapshot" : "Invalid last price";
+    }
+  }
+  return {dates: mDates, caps, sharesOut, notes};
+}
+
+/** =========================================================
+    Sorting & Portfolio construction
+   ========================================================= */
+
+function buildSizePortfolios(monthly, mcapHist, tickers){
+  // At each month-end (index t for mDates), we:
+  // - compute mcap for each ticker at that month-end (using mcapHist)
+  // - rank by size
+  // - select top 10 and bottom 10
+  // - compute NEXT month return (monthly.returns is aligned to mDates[1..])
+  // So portfolio return at time t corresponds to returns from month t to t+1 (i.e., monthly returns index t)
+  const mDates = monthly.dates;          // length M
+  const rDates = mDates.slice(1);        // length M-1 (return dates)
+  const M = mDates.length;
+  const R = M-1;
+
+  const high = new Array(R).fill(NaN);
+  const low  = new Array(R).fill(NaN);
+  const ew   = new Array(R).fill(NaN);
+  const ls   = new Array(R).fill(NaN);
+
+  let holdingsLatest = {high:[], low:[]};
+
+  for(let t=0;t<R;t++){
+    // rank at month-end t (mDates[t]) for returns at t (which is month t -> t+1)
+    const sizes = [];
+    for(const tk of tickers){
+      const capArr = mcapHist.caps[tk];
+      const cap = capArr ? capArr[t] : NaN;
+      if(isFinite(cap)) sizes.push({ticker:tk, cap});
+    }
+    sizes.sort((a,b)=>b.cap-a.cap); // desc
+    const top = sizes.slice(0, Math.min(10, sizes.length));
+    const bot = sizes.slice(Math.max(0, sizes.length-10));
+    const topSet = new Set(top.map(x=>x.ticker));
+    const botSet = new Set(bot.map(x=>x.ticker));
+
+    // equal-weight returns next month
+    const topRets = [];
+    const botRets = [];
+    const allRets = [];
+    for(const tk of tickers){
+      const r = monthly.returns[tk][t]; // month t->t+1
+      if(isFinite(r)){
+        allRets.push(r);
+        if(topSet.has(tk)) topRets.push(r);
+        if(botSet.has(tk)) botRets.push(r);
+      }
+    }
+    high[t] = topRets.length ? mean(topRets) : NaN;
+    low[t]  = botRets.length ? mean(botRets) : NaN;
+    ew[t]   = allRets.length ? mean(allRets) : NaN;
+    ls[t]   = (isFinite(low[t]) && isFinite(high[t])) ? (low[t]-high[t]) : NaN;
+
+    if(t === R-1){
+      // holdings for latest month-end (mDates[M-2]) used for last return month? but assignment: show latest month holdings.
+      // We'll show buckets at latest month-end date mDates[M-1] (last available month-end).
+      // For that, compute ranks at last month-end (index M-1).
+    }
+  }
+
+  // Build holdings at latest month-end (index M-1)
+  const sizesLast = [];
+  const lastIdx = M-1;
+  for(const tk of tickers){
+    const cap = (mcapHist.caps[tk]||[])[lastIdx];
+    if(isFinite(cap)) sizesLast.push({ticker:tk, cap});
+  }
+  sizesLast.sort((a,b)=>b.cap-a.cap);
+  const topLast = sizesLast.slice(0, Math.min(10, sizesLast.length));
+  const botLast = sizesLast.slice(Math.max(0, sizesLast.length-10));
+  const wTop = topLast.length ? 1/topLast.length : NaN;
+  const wBot = botLast.length ? 1/botLast.length : NaN;
+
+  holdingsLatest.high = topLast.map((x,i)=>({bucket:"High", ticker:x.ticker, mcap:x.cap, weight:wTop, rank:i+1}));
+  holdingsLatest.low  = botLast.map((x,i)=>({bucket:"Low",  ticker:x.ticker, mcap:x.cap, weight:wBot, rank:(sizesLast.length - botLast.length + i + 1)}));
+
+  const out = {dates: rDates, high, low, ew, ls, holdingsLatest};
+  out.cum = {
+    high: cumprodFromReturns(high),
+    low:  cumprodFromReturns(low),
+    ew:   cumprodFromReturns(ew),
+    ls:   cumprodFromReturns(ls) // note: LS "wealth" not realistic but ok for cumulative factor
+  };
+  out.dd = {
+    high: drawdownFromWealth(out.cum.high),
+    low:  drawdownFromWealth(out.cum.low),
+    ew:   drawdownFromWealth(out.cum.ew),
+    ls:   drawdownFromWealth(out.cum.ls)
+  };
+  return out;
+}
+
+/** =========================================================
+    Metrics
+   ========================================================= */
+
+function calcMetricsForSeries(rets, rfAnnual){
+  const annRet = annualizeReturnFromMonthly(rets);
+  const annVol = annualizeVolFromMonthly(rets);
+  const rf = rfAnnual;
+  const sharpe = (isFinite(annRet)&&isFinite(annVol)&&annVol>0) ? ((annRet - rf)/annVol) : NaN;
+  const skew = skewness(rets);
+  const kurt = kurtosisExcess(rets);
+  const mdd  = maxDrawdown(rets);
+  const sortino = sortinoRatio(rets, rfAnnual);
+  const calmar = calmarRatio(rets);
+  return {annRet, annVol, sharpe, skew, kurt, mdd, sortino, calmar};
+}
+
+function calcAllMetrics(portfolios, rfAnnual){
+  return {
+    "Low-size":  calcMetricsForSeries(portfolios.low, rfAnnual),
+    "High-size": calcMetricsForSeries(portfolios.high, rfAnnual),
+    "Long-short":calcMetricsForSeries(portfolios.ls, rfAnnual),
+    "Equal-weight": calcMetricsForSeries(portfolios.ew, rfAnnual)
+  };
+}
+
+/** =========================================================
+    Rendering helpers: tables, KPIs, charts, discussion
+   ========================================================= */
+
+function setDataStatusLine(){
+  const line = document.getElementById("dataStatusLine");
+  const demo = (STATE.mode==="DEMO");
+  const upload = (STATE.mode==="UPLOAD");
+  const auto = (STATE.mode==="AUTO");
+  const tag = demo ? `<span class="pill warn">DEMO DATA</span>` :
+              upload ? `<span class="pill ok">UPLOAD</span>` :
+              auto ? `<span class="pill ok">AUTO-FETCH</span>` : `<span class="pill">—</span>`;
+  const warns = STATE.warnings.length ? ` · Warnings: ${STATE.warnings.length}` : "";
+  line.innerHTML = `Data status: ${tag}${warns}`;
+}
+
+function updateSubtitle(){
+  const periodEl = document.getElementById("period");
+  const retainedEl = document.getElementById("retained");
+  const d = STATE.daily.dates;
+  const tks = STATE.tickers;
+  periodEl.textContent = d.length ? `${d[0]} → ${d[d.length-1]}` : "—";
+  retainedEl.textContent = tks.length ? `${tks.length}` : "—";
+}
+
+function renderUniverseTable(integrity){
+  const tbody = document.querySelector("#universeTable tbody");
+  tbody.innerHTML = "";
+  for(const r of integrity){
+    const status = r.hasFull
+      ? `<span class="tag"><span class="dot ok"></span>Yes</span>`
+      : `<span class="tag"><span class="dot danger"></span>No</span>`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono"><strong>${r.ticker}</strong></td>
+      <td>${r.company||""}</td>
+      <td>${status}</td>
+      <td>${r.reason||""}</td>
+      <td class="mono">${r.firstDate}</td>
+      <td class="mono">${r.lastDate}</td>
+      <td class="mono">${fmtNum(r.obs,0)}</td>
+      <td class="mono">${fmtNum(r.missing,0)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderMcapTable(mcapHist){
+  const tbody = document.querySelector("#mcapTable tbody");
+  tbody.innerHTML = "";
+  for(const tk of STATE.tickers){
+    const snap = STATE.marketCaps[tk];
+    const lastPrice = (STATE.monthly.prices[tk]||[]).slice(-1)[0];
+    const shares = (mcapHist.sharesOut||{})[tk];
+    const note = (mcapHist.notes||{})[tk] || "";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono"><strong>${tk}</strong></td>
+      <td class="mono">${isFinite(snap)? fmtUSD(snap) : "—"}</td>
+      <td class="mono">${isFinite(lastPrice)? fmtNum(lastPrice,2) : "—"}</td>
+      <td class="mono">${isFinite(shares)? fmtNum(shares,0) : "—"}</td>
+      <td>${note}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderHoldingsTable(hold){
+  const tbody = document.querySelector("#holdingsTable tbody");
+  tbody.innerHTML = "";
+  const rows = [...hold.high.map(x=>({...x,bucket:"High"})), ...hold.low.map(x=>({...x,bucket:"Low"}))];
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="tag"><span class="dot ${r.bucket==="High"?"ok":"warn"}"></span>${r.bucket}</span></td>
+      <td class="mono"><strong>${r.ticker}</strong></td>
+      <td class="mono">${fmtUSD(r.mcap)}</td>
+      <td class="mono">${fmtPct(r.weight)}</td>
+      <td class="mono">${fmtNum(r.rank,0)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderMetricsTable(metrics){
+  const tbody = document.querySelector("#metricsTable tbody");
+  tbody.innerHTML = "";
+  const order = ["Low-size","High-size","Long-short","Equal-weight"];
+  for(const k of order){
+    const m = metrics[k] || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${k}</strong></td>
+      <td class="mono">${fmtPct(m.annRet)}</td>
+      <td class="mono">${fmtPct(m.annVol)}</td>
+      <td class="mono">${isFinite(m.sharpe)? fmtNum(m.sharpe,2) : "—"}</td>
+      <td class="mono">${isFinite(m.skew)? fmtNum(m.skew,2) : "—"}</td>
+      <td class="mono">${isFinite(m.kurt)? fmtNum(m.kurt,2) : "—"}</td>
+      <td class="mono">${fmtPct(m.mdd)}</td>
+      <td class="mono">${isFinite(m.sortino)? fmtNum(m.sortino,2) : "—"}</td>
+      <td class="mono">${isFinite(m.calmar)? fmtNum(m.calmar,2) : "—"}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderKPIs(metrics){
+  const kpiRow = document.getElementById("kpiRow");
+  kpiRow.innerHTML = "";
+
+  const avgCorr = averageCorrelation(STATE.monthly.returns);
+  const labelMode = STATE.mode==="DEMO" ? "DEMO" : (STATE.mode==="UPLOAD"?"UPLOAD":"AUTO");
+
+  // cards: Ann Return, Ann Vol, Sharpe, Max DD (each shows Low/High/LS/EW)
+  const cards = [
+    {title:"Annualized return", key:"annRet", fmt:fmtPct},
+    {title:"Annualized volatility", key:"annVol", fmt:fmtPct},
+    {title:"Sharpe ratio", key:"sharpe", fmt:(x)=>isFinite(x)?fmtNum(x,2):"—"},
+    {title:"Max drawdown", key:"mdd", fmt:fmtPct}
+  ];
+  for(const c of cards){
+    const el = document.createElement("div");
+    el.className = "kpi";
+    el.innerHTML = `
+      <div class="label">
+        <span>${c.title}</span>
+        <span class="pill ${STATE.mode==="DEMO"?"warn":"ok"}">${labelMode}</span>
+      </div>
+      <div class="value mono">
+        <span style="color:var(--green)">L ${c.fmt(metrics["Low-size"][c.key])}</span>
+        <span style="color:var(--blue)"> · H ${c.fmt(metrics["High-size"][c.key])}</span>
+      </div>
+      <div class="sub mono">
+        <span style="color:var(--purple)">LS ${c.fmt(metrics["Long-short"][c.key])}</span>
+        <span style="color:var(--orange)"> · EW ${c.fmt(metrics["Equal-weight"][c.key])}</span>
+      </div>
+    `;
+    kpiRow.appendChild(el);
+  }
+
+  // Optional KPI: avg correlation
+  const corrEl = document.createElement("div");
+  corrEl.className = "kpi";
+  corrEl.style.gridColumn = "span 6";
+  corrEl.innerHTML = `
+    <div class="label">
+      <span>Average pairwise correlation (stocks)</span>
+      <span class="pill">${STATE.tickers.length} tickers</span>
+    </div>
+    <div class="value mono">${isFinite(avgCorr)? fmtNum(avgCorr,2) : "—"}</div>
+    <div class="sub">Computed on monthly stock returns (retained universe).</div>
+  `;
+  const statusEl = document.createElement("div");
+  statusEl.className = "kpi";
+  statusEl.style.gridColumn = "span 6";
+  statusEl.innerHTML = `
+    <div class="label">
+      <span>Universe status</span>
+      <span class="pill ${STATE.mode==="DEMO"?"warn":"ok"}">${labelMode}</span>
+    </div>
+    <div class="value mono">${STATE.daily.dates.length? `${STATE.daily.dates[0]} → ${STATE.daily.dates[STATE.daily.dates.length-1]}`:"—"}</div>
+    <div class="sub mono">Monthly rebalancing · ${STATE.tickers.length} retained stocks</div>
+  `;
+  kpiRow.appendChild(corrEl);
+  kpiRow.appendChild(statusEl);
+}
+
+function buildDiscussion(metrics){
+  const mLow = metrics["Low-size"], mHigh = metrics["High-size"], mLS = metrics["Long-short"], mEW = metrics["Equal-weight"];
+  const better = (isFinite(mLow.annRet) && isFinite(mHigh.annRet)) ? (mLow.annRet > mHigh.annRet) : null;
+  const lsPos = isFinite(mLS.annRet) ? (mLS.annRet > 0) : null;
+  const lsSharpe = mLS.sharpe;
+
+  const ddWarn = (isFinite(mLow.mdd) && isFinite(mHigh.mdd)) ? (Math.min(mLow.mdd, mHigh.mdd) < -0.35) : false;
+
+  const html = `
+    <p>
+      This dashboard implements a classical <strong>size factor</strong> construction on the retained Dow constituents using
+      <strong>monthly rebalancing</strong> and equal-weighted buckets. Market capitalization is inferred from a latest-date snapshot
+      (shares outstanding assumed constant), which enables a historical size series for monthly ranking.
+    </p>
+
+    <ul>
+      <li><strong>Return comparison:</strong> Low-size annualized return = <span class="mono">${fmtPct(mLow.annRet)}</span> vs High-size = <span class="mono">${fmtPct(mHigh.annRet)}</span>.
+          ${better===null ? "" : (better ? "Small (low-size) outperforms large (high-size) over the sample." : "Large (high-size) outperforms small (low-size) over the sample.")}</li>
+      <li><strong>Long-short factor:</strong> LS annualized return = <span class="mono">${fmtPct(mLS.annRet)}</span>, Sharpe = <span class="mono">${isFinite(lsSharpe)?fmtNum(lsSharpe,2):"—"}</span>.
+          ${lsPos===null ? "" : (lsPos ? "The factor delivers a positive average premium." : "The factor is not positive on average in this sample.")}</li>
+      <li><strong>Risk / drawdown:</strong> Max drawdown Low = <span class="mono">${fmtPct(mLow.mdd)}</span>, High = <span class="mono">${fmtPct(mHigh.mdd)}</span>, LS = <span class="mono">${fmtPct(mLS.mdd)}</span>.
+          ${ddWarn ? "Notable drawdowns suggest meaningful crash risk / cyclicality." : "Drawdowns appear moderate given the sample."}</li>
+      <li><strong>Diversification angle:</strong> Compare LS risk to individual legs and the equal-weight benchmark (EW Sharpe = <span class="mono">${isFinite(mEW.sharpe)?fmtNum(mEW.sharpe,2):"—"}</span>).
+          A long-short construction can reduce broad market exposure, but can introduce <em>factor crowding</em> and short-side implementation frictions.</li>
+      <li><strong>Distribution shape:</strong> LS skew = <span class="mono">${isFinite(mLS.skew)?fmtNum(mLS.skew,2):"—"}</span>, LS excess kurtosis = <span class="mono">${isFinite(mLS.kurt)?fmtNum(mLS.kurt,2):"—"}</span>.
+          Non-normality (fat tails) is common in factor returns and affects risk management.</li>
+    </ul>
+
+    <p>
+      <strong>Interpretation:</strong> If the low-size portfolio persistently exceeds the high-size portfolio and the LS series is positive with a reasonable Sharpe,
+      this supports the attractiveness of the size premium in the observed universe. However, the analysis is sensitive to assumptions:
+      using a fixed market-cap snapshot implies constant shares outstanding; using <em>current</em> Dow constituents introduces survivorship bias;
+      and ignoring transaction costs understates the impact of monthly turnover (especially for shorting in the LS portfolio).
+    </p>
+
+    <p><strong>Conclusion:</strong> Based on this sample, the size factor is
+      <span class="mono">${lsPos===null ? "—" : (lsPos ? "economically attractive (positive LS premium)" : "not reliably positive")}</span>,
+      with risk characteristics reflected in volatility and drawdown charts. For academic robustness, sensitivity tests (alternative weighting, transaction costs, alternative universes) are recommended.
+    </p>
+  `;
+  document.getElementById("discussion").innerHTML = html;
+}
+
+/** =========================================================
+    Charts (ApexCharts)
+   ========================================================= */
+
+function destroyChart(id){
+  if(CHARTS[id]){
+    try{ CHARTS[id].destroy(); }catch(e){}
+    CHARTS[id]=null;
+  }
+}
+
+function baseChartOpts(){
+  return {
+    chart: {
+      type: "line",
+      height: 320,
+      toolbar: {show:false},
+      zoom: {enabled:false},
+      animations: {enabled:true}
+    },
+    stroke: {width:2},
+    grid: {borderColor: "rgba(148,163,184,.35)"},
+    xaxis: {type:"datetime", labels:{datetimeUTC:false}},
+    yaxis: {labels:{formatter:(v)=>fmtNum(v,2)}},
+    tooltip: {x:{format:"yyyy-MM-dd"}}
+  };
+}
+
+function renderMissingBar(integrity){
+  destroyChart("missingBar");
+  const data = integrity.map(r=>({x:r.ticker, y:r.missing}));
+  CHARTS["missingBar"] = new ApexCharts(document.querySelector("#missingBar"), {
+    chart:{type:"bar", height:260, toolbar:{show:false}},
+    series:[{name:"Missing obs", data}],
+    plotOptions:{bar:{borderRadius:6, columnWidth:"60%"}},
+    xaxis:{type:"category", labels:{rotate:-45}},
+    yaxis:{labels:{formatter:(v)=>fmtNum(v,0)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtNum(v,0)}}
+  });
+  CHARTS["missingBar"].render();
+}
+
+function renderCoverageTimeline(integrity){
+  destroyChart("coverageTimeline");
+  // Use rangeBar
+  const series = [{
+    name:"Coverage",
+    data: integrity.map(r=>{
+      const s = (r.firstDate && r.firstDate!=="—") ? new Date(r.firstDate).getTime() : null;
+      const e = (r.lastDate && r.lastDate!=="—") ? new Date(r.lastDate).getTime() : null;
+      return {x:r.ticker, y: (s&&e)? [s,e] : [0,0], fillColor: r.hasFull? "rgba(34,197,94,.75)" : "rgba(239,68,68,.65)"};
+    })
+  }];
+  CHARTS["coverageTimeline"] = new ApexCharts(document.querySelector("#coverageTimeline"),{
+    chart:{type:"rangeBar", height:260, toolbar:{show:false}},
+    series,
+    plotOptions:{bar:{horizontal:true, borderRadius:6}},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{style:{fontSize:"11px"}}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{x:{format:"yyyy-MM-dd"}}
+  });
+  CHARTS["coverageTimeline"].render();
+}
+
+function renderMcapDist(){
+  destroyChart("mcapDist");
+  const vals = STATE.tickers.map(t=>STATE.marketCaps[t]).filter(v=>isFinite(v) && v>0).map(v=>Math.log10(v));
+  const bins = 12;
+  if(vals.length<2){
+    document.querySelector("#mcapDist").innerHTML = `<div class="muted">Not enough market cap data to plot.</div>`;
+    return;
+  }
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const w = (max-min)/bins || 1;
+  const counts = new Array(bins).fill(0);
+  vals.forEach(v=>{
+    const b = clamp(Math.floor((v-min)/w),0,bins-1);
+    counts[b]++;
+  });
+  const labels = counts.map((_,i)=> (min + i*w).toFixed(2));
+  CHARTS["mcapDist"] = new ApexCharts(document.querySelector("#mcapDist"),{
+    chart:{type:"bar", height:260, toolbar:{show:false}},
+    series:[{name:"Count", data: counts}],
+    xaxis:{categories: labels, title:{text:"log10(MarketCap)"}},
+    yaxis:{title:{text:"Count"}},
+    plotOptions:{bar:{borderRadius:6, columnWidth:"70%"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"}
+  });
+  CHARTS["mcapDist"].render();
+}
+
+function renderMcapTop10(){
+  destroyChart("mcapTop10");
+  const arr = STATE.tickers
+    .map(t=>({t, v:STATE.marketCaps[t]}))
+    .filter(x=>isFinite(x.v))
+    .sort((a,b)=>b.v-a.v)
+    .slice(0,10);
+  const cats = arr.map(x=>x.t);
+  const data = arr.map(x=>x.v);
+  CHARTS["mcapTop10"] = new ApexCharts(document.querySelector("#mcapTop10"),{
+    chart:{type:"bar", height:260, toolbar:{show:false}},
+    series:[{name:"MarketCap", data}],
+    xaxis:{categories: cats},
+    yaxis:{labels:{formatter:(v)=>fmtUSD(v)}},
+    plotOptions:{bar:{borderRadius:6, columnWidth:"60%"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtUSD(v)}}
+  });
+  CHARTS["mcapTop10"].render();
+}
+
+function renderRankLines(){
+  destroyChart("rankLines");
+  const mDates = STATE.mcapHist.dates;
+  const caps = STATE.mcapHist.caps;
+  const snapTop = STATE.tickers
+    .map(t=>({t, v:STATE.marketCaps[t]}))
+    .filter(x=>isFinite(x.v))
+    .sort((a,b)=>b.v-a.v)
+    .slice(0,6)
+    .map(x=>x.t);
+  const series = snapTop.map(tk=>{
+    // monthly ranks at each month-end
+    const ranks = [];
+    for(let i=0;i<mDates.length;i++){
+      const vals = STATE.tickers.map(t=>({t, v:(caps[t]||[])[i]})).filter(x=>isFinite(x.v)).sort((a,b)=>b.v-a.v);
+      const idx = vals.findIndex(x=>x.t===tk);
+      ranks.push(idx>=0? (idx+1) : null);
+    }
+    return {name: tk, data: mDates.map((d,i)=>[new Date(d).getTime(), ranks[i]])};
+  });
+  CHARTS["rankLines"] = new ApexCharts(document.querySelector("#rankLines"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series,
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{
+      reversed:true,
+      min:1,
+      labels:{formatter:(v)=>fmtNum(v,0)},
+      title:{text:"Rank (1=largest)"}
+    },
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{x:{format:"yyyy-MM-dd"}}
+  });
+  CHARTS["rankLines"].render();
+}
+
+function renderMonthlyReturnHistAll(){
+  destroyChart("retHistAll");
+  const all = [];
+  for(const tk of STATE.tickers){
+    all.push(...(STATE.monthly.returns[tk]||[]).filter(v=>isFinite(v)));
+  }
+  if(all.length<5){
+    document.querySelector("#retHistAll").innerHTML = `<div class="muted">Not enough monthly returns.</div>`;
+    return;
+  }
+  // histogram
+  const bins = 24;
+  const min = Math.min(...all), max = Math.max(...all);
+  const w = (max-min)/bins || 1;
+  const counts = new Array(bins).fill(0);
+  all.forEach(v=>{
+    const b = clamp(Math.floor((v-min)/w),0,bins-1);
+    counts[b]++;
+  });
+  const labels = counts.map((_,i)=> ((min + i*w)*100).toFixed(1)+"%");
+  CHARTS["retHistAll"] = new ApexCharts(document.querySelector("#retHistAll"),{
+    chart:{type:"bar", height:260, toolbar:{show:false}},
+    series:[{name:"Count", data:counts}],
+    xaxis:{categories:labels, labels:{rotate:-45}},
+    yaxis:{labels:{formatter:(v)=>fmtNum(v,0)}},
+    plotOptions:{bar:{borderRadius:6, columnWidth:"70%"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"}
+  });
+  CHARTS["retHistAll"].render();
+}
+
+function renderCSMeanDisp(){
+  destroyChart("csMeanDisp");
+  const rDates = STATE.portfolios.dates;
+  const csMean = [];
+  const csStd = [];
+  const R = rDates.length;
+  for(let t=0;t<R;t++){
+    const xs = STATE.tickers.map(tk=>STATE.monthly.returns[tk][t]).filter(v=>isFinite(v));
+    csMean.push(mean(xs));
+    csStd.push(stdev(xs));
+  }
+  CHARTS["csMeanDisp"] = new ApexCharts(document.querySelector("#csMeanDisp"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[
+      {name:"Cross-sectional mean", data: rDates.map((d,i)=>[new Date(d).getTime(), csMean[i]])},
+      {name:"Cross-sectional dispersion (std)", data: rDates.map((d,i)=>[new Date(d).getTime(), csStd[i]])},
+    ],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{x:{format:"yyyy-MM-dd"}, y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["csMeanDisp"].render();
+}
+
+function renderCumulativeWithStocks(){
+  destroyChart("cumReturns");
+  const rDates = STATE.portfolios.dates.map(d=>new Date(d).getTime());
+
+  // portfolios always visible
+  const series = [
+    {name:"High-size", data: rDates.map((t,i)=>[t, STATE.portfolios.cum.high[i]]), color: COLORS.high},
+    {name:"Low-size",  data: rDates.map((t,i)=>[t, STATE.portfolios.cum.low[i]]),  color: COLORS.low},
+    {name:"Equal-weight", data: rDates.map((t,i)=>[t, STATE.portfolios.cum.ew[i]]), color: COLORS.ew}
+  ];
+
+  // optional stock overlays (muted)
+  const muted = ["#94a3b8","#64748b","#a1a1aa","#60a5fa","#34d399","#fbbf24","#cbd5e1","#a78bfa"];
+  let mi = 0;
+  for(const tk of STATE.tickers){
+    if(STATE.ui.stockVisible[tk]){
+      // build stock cumulative from its monthly returns
+      const w = cumprodFromReturns(STATE.monthly.returns[tk]);
+      series.push({name: tk, data: rDates.map((t,i)=>[t, w[i]]), color: muted[mi % muted.length]});
+      mi++;
+    }
+  }
+
+  CHARTS["cumReturns"] = new ApexCharts(document.querySelector("#cumReturns"),{
+    ...baseChartOpts(),
+    chart:{type:"line", height:360, toolbar:{show:false}},
+    series,
+    yaxis:{labels:{formatter:(v)=>fmtNum(v,2)}, title:{text:"Wealth Index (Start=1)"}},
+    tooltip:{x:{format:"yyyy-MM-dd"}}
+  });
+  CHARTS["cumReturns"].render();
+}
+
+function renderGrowth10k(){
+  destroyChart("growth10k");
+  const rDates = STATE.portfolios.dates.map(d=>new Date(d).getTime());
+  const base = 10000;
+  const series = [
+    {name:"High-size", data: rDates.map((t,i)=>[t, base*STATE.portfolios.cum.high[i]]), color: COLORS.high},
+    {name:"Low-size",  data: rDates.map((t,i)=>[t, base*STATE.portfolios.cum.low[i]]),  color: COLORS.low},
+    {name:"Equal-weight", data: rDates.map((t,i)=>[t, base*STATE.portfolios.cum.ew[i]]), color: COLORS.ew}
+  ];
+  CHARTS["growth10k"] = new ApexCharts(document.querySelector("#growth10k"),{
+    ...baseChartOpts(),
+    chart:{type:"line", height:360, toolbar:{show:false}},
+    series,
+    yaxis:{labels:{formatter:(v)=>fmtNum(v,0)}},
+    tooltip:{y:{formatter:(v)=>fmtNum(v,0)}}
+  });
+  CHARTS["growth10k"].render();
+}
+
+function annualReturnsFromMonthly(rDatesISO, rets){
+  // group by calendar year
+  const byYear = new Map();
+  for(let i=0;i<rDatesISO.length;i++){
+    const y = rDatesISO[i].slice(0,4);
+    if(!byYear.has(y)) byYear.set(y, []);
+    byYear.get(y).push(rets[i]);
+  }
+  const years = Array.from(byYear.keys()).sort();
+  const ann = years.map(y=>{
+    const xs = byYear.get(y).filter(v=>isFinite(v));
+    const tot = xs.reduce((a,r)=>a*(1+r),1);
+    return tot-1;
+  });
+  return {years, ann};
+}
+
+function renderAnnualBars(){
+  destroyChart("annualBars");
+  const rDates = STATE.portfolios.dates;
+  const aLow = annualReturnsFromMonthly(rDates, STATE.portfolios.low);
+  const aHigh= annualReturnsFromMonthly(rDates, STATE.portfolios.high);
+  const aEW  = annualReturnsFromMonthly(rDates, STATE.portfolios.ew);
+  const years = unique([...aLow.years, ...aHigh.years, ...aEW.years]).sort();
+  function align(annObj){
+    const map = new Map(annObj.years.map((y,i)=>[y, annObj.ann[i]]));
+    return years.map(y=> map.has(y)? map.get(y) : 0);
+  }
+  CHARTS["annualBars"] = new ApexCharts(document.querySelector("#annualBars"),{
+    chart:{type:"bar", height:260, stacked:false, toolbar:{show:false}},
+    series:[
+      {name:"Low-size", data: align(aLow), color: COLORS.low},
+      {name:"High-size", data: align(aHigh), color: COLORS.high},
+      {name:"Equal-weight", data: align(aEW), color: COLORS.ew}
+    ],
+    xaxis:{categories:years},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    plotOptions:{bar:{borderRadius:6, columnWidth:"70%"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["annualBars"].render();
+}
+
+function renderDrawdowns(){
+  destroyChart("drawdowns");
+  const rDates = STATE.portfolios.dates.map(d=>new Date(d).getTime());
+  CHARTS["drawdowns"] = new ApexCharts(document.querySelector("#drawdowns"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[
+      {name:"Low-size", data: rDates.map((t,i)=>[t, STATE.portfolios.dd.low[i]]), color: COLORS.low},
+      {name:"High-size", data: rDates.map((t,i)=>[t, STATE.portfolios.dd.high[i]]), color: COLORS.high},
+      {name:"Equal-weight", data: rDates.map((t,i)=>[t, STATE.portfolios.dd.ew[i]]), color: COLORS.ew}
+    ],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}, title:{text:"Drawdown"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["drawdowns"].render();
+}
+
+function rollingWindowSeries(rDatesISO, rets, window=12, transformFn){
+  const out = [];
+  for(let i=0;i<rets.length;i++){
+    if(i < window-1){ out.push(null); continue; }
+    const win = rets.slice(i-window+1, i+1);
+    out.push(transformFn(win));
+  }
+  return rDatesISO.map((d,i)=>[new Date(d).getTime(), out[i]]);
+}
+
+function renderRollingCharts(){
+  destroyChart("rollRet");
+  destroyChart("rollVol");
+  destroyChart("rollSharpe");
+
+  const rDates = STATE.portfolios.dates;
+  const rfAnnual = getRfAnnual();
+
+  const rollRetLow = rollingWindowSeries(rDates, STATE.portfolios.low, 12, (win)=>win.reduce((a,r)=>a*(1+r),1)-1);
+  const rollRetHigh= rollingWindowSeries(rDates, STATE.portfolios.high,12, (win)=>win.reduce((a,r)=>a*(1+r),1)-1);
+  const rollRetEW  = rollingWindowSeries(rDates, STATE.portfolios.ew,  12, (win)=>win.reduce((a,r)=>a*(1+r),1)-1);
+
+  CHARTS["rollRet"] = new ApexCharts(document.querySelector("#rollRet"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[
+      {name:"Low-size", data: rollRetLow, color: COLORS.low},
+      {name:"High-size", data: rollRetHigh, color: COLORS.high},
+      {name:"Equal-weight", data: rollRetEW, color: COLORS.ew},
+    ],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["rollRet"].render();
+
+  const rollVolLow = rollingWindowSeries(rDates, STATE.portfolios.low, 12, (win)=>stdev(win)*Math.sqrt(12));
+  const rollVolHigh= rollingWindowSeries(rDates, STATE.portfolios.high,12, (win)=>stdev(win)*Math.sqrt(12));
+  const rollVolEW  = rollingWindowSeries(rDates, STATE.portfolios.ew,  12, (win)=>stdev(win)*Math.sqrt(12));
+
+  CHARTS["rollVol"] = new ApexCharts(document.querySelector("#rollVol"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[
+      {name:"Low-size", data: rollVolLow, color: COLORS.low},
+      {name:"High-size", data: rollVolHigh, color: COLORS.high},
+      {name:"Equal-weight", data: rollVolEW, color: COLORS.ew},
+    ],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["rollVol"].render();
+
+  const rfM = Math.pow(1+rfAnnual,1/12)-1;
+  const rollSharpeLow = rollingWindowSeries(rDates, STATE.portfolios.low, 12, (win)=>{
+    const ex = win.map(r=>r-rfM);
+    const m = mean(ex), s = stdev(ex);
+    return (isFinite(m)&&isFinite(s)&&s>0) ? (m*12)/(s*Math.sqrt(12)) : NaN;
+  });
+  const rollSharpeHigh = rollingWindowSeries(rDates, STATE.portfolios.high, 12, (win)=>{
+    const ex = win.map(r=>r-rfM);
+    const m = mean(ex), s = stdev(ex);
+    return (isFinite(m)&&isFinite(s)&&s>0) ? (m*12)/(s*Math.sqrt(12)) : NaN;
+  });
+  const rollSharpeEW = rollingWindowSeries(rDates, STATE.portfolios.ew, 12, (win)=>{
+    const ex = win.map(r=>r-rfM);
+    const m = mean(ex), s = stdev(ex);
+    return (isFinite(m)&&isFinite(s)&&s>0) ? (m*12)/(s*Math.sqrt(12)) : NaN;
+  });
+
+  CHARTS["rollSharpe"] = new ApexCharts(document.querySelector("#rollSharpe"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[
+      {name:"Low-size", data: rollSharpeLow, color: COLORS.low},
+      {name:"High-size", data: rollSharpeHigh, color: COLORS.high},
+      {name:"Equal-weight", data: rollSharpeEW, color: COLORS.ew},
+    ],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>isFinite(v)?fmtNum(v,2):"—"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>isFinite(v)?fmtNum(v,2):"—"}}
+  });
+  CHARTS["rollSharpe"].render();
+}
+
+function renderLongShortCharts(){
+  const rDates = STATE.portfolios.dates.map(d=>new Date(d).getTime());
+
+  destroyChart("lsCum");
+  CHARTS["lsCum"] = new ApexCharts(document.querySelector("#lsCum"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[{name:"Long-short (Low − High)", data: rDates.map((t,i)=>[t, STATE.portfolios.cum.ls[i]]), color: COLORS.ls}],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtNum(v,2)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtNum(v,2)}}
+  });
+  CHARTS["lsCum"].render();
+
+  destroyChart("lsDD");
+  CHARTS["lsDD"] = new ApexCharts(document.querySelector("#lsDD"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[{name:"LS drawdown", data: rDates.map((t,i)=>[t, STATE.portfolios.dd.ls[i]]), color: COLORS.ls}],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["lsDD"].render();
+
+  destroyChart("lsBars");
+  // show last ~60 months for readability
+  const n = STATE.portfolios.ls.length;
+  const start = Math.max(0, n-60);
+  const cats = STATE.portfolios.dates.slice(start).map(d=>d.slice(0,7));
+  const vals = STATE.portfolios.ls.slice(start);
+  CHARTS["lsBars"] = new ApexCharts(document.querySelector("#lsBars"),{
+    chart:{type:"bar", height:260, toolbar:{show:false}},
+    series:[{name:"LS monthly return", data: vals, color: COLORS.ls}],
+    xaxis:{categories: cats, labels:{rotate:-45}},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    plotOptions:{bar:{borderRadius:6, columnWidth:"70%"}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["lsBars"].render();
+
+  destroyChart("lsHist");
+  const all = STATE.portfolios.ls.filter(v=>isFinite(v));
+  if(all.length>5){
+    const bins=24;
+    const min=Math.min(...all), max=Math.max(...all);
+    const w=(max-min)/bins||1;
+    const counts=new Array(bins).fill(0);
+    all.forEach(v=>{
+      const b=clamp(Math.floor((v-min)/w),0,bins-1);
+      counts[b]++;
+    });
+    const labels=counts.map((_,i)=>((min+i*w)*100).toFixed(1)+"%");
+    CHARTS["lsHist"] = new ApexCharts(document.querySelector("#lsHist"),{
+      chart:{type:"bar", height:260, toolbar:{show:false}},
+      series:[{name:"Count", data:counts, color: COLORS.ls}],
+      xaxis:{categories:labels, labels:{rotate:-45}},
+      yaxis:{labels:{formatter:(v)=>fmtNum(v,0)}},
+      plotOptions:{bar:{borderRadius:6, columnWidth:"70%"}},
+      grid:{borderColor:"rgba(148,163,184,.35)"}
+    });
+    CHARTS["lsHist"].render();
+  }else{
+    document.querySelector("#lsHist").innerHTML = `<div class="muted">Not enough LS returns.</div>`;
+  }
+
+  destroyChart("lsRoll");
+  const roll = rollingWindowSeries(STATE.portfolios.dates, STATE.portfolios.ls, 12, (win)=>win.reduce((a,r)=>a*(1+r),1)-1);
+  CHARTS["lsRoll"] = new ApexCharts(document.querySelector("#lsRoll"),{
+    chart:{type:"line", height:260, toolbar:{show:false}},
+    series:[{name:"LS rolling 12m return", data: roll, color: COLORS.ls}],
+    stroke:{width:2},
+    xaxis:{type:"datetime"},
+    yaxis:{labels:{formatter:(v)=>fmtPct(v)}},
+    grid:{borderColor:"rgba(148,163,184,.35)"},
+    tooltip:{y:{formatter:(v)=>fmtPct(v)}}
+  });
+  CHARTS["lsRoll"].render();
+}
+
+function renderRadar(metrics){
+  destroyChart("radar");
+  // normalize across portfolios:
+  // Metrics: Return (higher better), Sharpe (higher), Vol (lower), MaxDD (lower)
+  const names = ["Low-size","High-size","Long-short","Equal-weight"];
+  const ret = names.map(n=>metrics[n].annRet);
+  const shr = names.map(n=>metrics[n].sharpe);
+  const vol = names.map(n=>metrics[n].annVol);
+  const dd  = names.map(n=>Math.abs(metrics[n].mdd));
+
+  function normHigher(arr){
+    const xs = arr.map(v=>isFinite(v)?v:null);
+    const vals = xs.filter(v=>v!==null);
+    if(!vals.length) return xs.map(_=>0);
+    const mn=Math.min(...vals), mx=Math.max(...vals);
+    return xs.map(v=> v===null?0 : (mx===mn? 0.5 : (v-mn)/(mx-mn)));
+  }
+  function normLower(arr){
+    const xs = arr.map(v=>isFinite(v)?v:null);
+    const vals = xs.filter(v=>v!==null);
+    if(!vals.length) return xs.map(_=>0);
+    const mn=Math.min(...vals), mx=Math.max(...vals);
+    return xs.map(v=> v===null?0 : (mx===mn? 0.5 : (mx-v)/(mx-mn)));
+  }
+  const nRet = normHigher(ret);
+  const nShr = normHigher(shr);
+  const nVol = normLower(vol);
+  const nDD  = normLower(dd);
+
+  CHARTS["radar"] = new ApexCharts(document.querySelector("#radar"),{
+    chart:{type:"radar", height:260, toolbar:{show:false}},
+    series: names.map((n,i)=>({
+      name:n,
+      data:[nRet[i], nShr[i], nVol[i], nDD[i]]
+    })),
+    xaxis:{categories:["Return","Sharpe","Low Vol","Low DD"]},
+    stroke:{width:2},
+    fill:{opacity:0.08},
+    markers:{size:2},
+    legend:{position:"bottom"},
+    yaxis:{min:0,max:1}
+  });
+  CHARTS["radar"].render();
+}
+
+function renderStockToggles(){
+  const wrap = document.getElementById("stockToggles");
+  wrap.innerHTML = "";
+  const note = document.getElementById("toggleNote");
+  note.textContent = "Stock overlays (muted): toggle tickers to overlay their cumulative performance on the portfolio chart.";
+  // default: off, but keep few on if demo
+  for(const tk of STATE.tickers.slice(0, 18)){
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.style.padding = "7px 10px";
+    btn.style.borderRadius = "999px";
+    btn.style.fontSize = "12px";
+    const on = !!STATE.ui.stockVisible[tk];
+    btn.style.borderColor = on ? "rgba(37,99,235,.35)" : "var(--line)";
+    btn.innerHTML = `${on?"✓ ":""}${tk}`;
+    btn.addEventListener("click", ()=>{
+      STATE.ui.stockVisible[tk] = !STATE.ui.stockVisible[tk];
+      renderStockToggles();
+      renderCumulativeWithStocks();
+    });
+    wrap.appendChild(btn);
+  }
+}
+
+function renderAllCharts(integrity){
+  renderMissingBar(integrity);
+  renderCoverageTimeline(integrity);
+  renderMcapDist();
+  renderMcapTop10();
+  renderRankLines();
+  renderMonthlyReturnHistAll();
+  renderCSMeanDisp();
+  renderStockToggles();
+  renderCumulativeWithStocks();
+  renderGrowth10k();
+  renderAnnualBars();
+  renderDrawdowns();
+  renderRollingCharts();
+  renderLongShortCharts();
+  renderRadar(STATE.metrics);
+}
+
+/** =========================================================
+    Pipeline Orchestration
+   ========================================================= */
+
+function getRfAnnual(){
+  const v = Number(document.getElementById("rfInput").value);
+  return isFinite(v) ? (v/100) : 0;
+}
+
+function applyDateInputs(dates){
+  const s = document.getElementById("dateStart");
+  const e = document.getElementById("dateEnd");
+  if(dates.length){
+    s.min = dates[0]; s.max = dates[dates.length-1];
+    e.min = dates[0]; e.max = dates[dates.length-1];
+    if(!s.value) s.value = dates[0];
+    if(!e.value) e.value = dates[dates.length-1];
+  }
+}
+
+function updateMcapSourceLabel(){
+  document.getElementById("mcapSource").textContent = STATE.sources.mcap;
+}
+
+function runFullPipeline(){
+  STATE.warnings = [];
+
+  // date range filter (daily)
+  const startISO = document.getElementById("dateStart").value || null;
+  const endISO = document.getElementById("dateEnd").value || null;
+
+  const filtered = filterByDateRange(STATE.daily.dates, STATE.daily.prices, STATE.tickers, startISO, endISO);
+
+  // Align + remove incomplete history
+  const aligned = alignTimeSeries(filtered.dates, filtered.prices, filtered.tickers);
+  STATE.daily.dates = aligned.dates;
+  STATE.daily.prices = aligned.prices;
+  STATE.tickers = aligned.tickers;
+
+  // Build monthly from retained universe
+  STATE.monthly = toMonthly(STATE.daily.dates, STATE.daily.prices, STATE.tickers);
+  if(STATE.monthly.dates.length < 6){
+    STATE.warnings.push("Too few months after filtering; consider expanding date range.");
+  }
+
+  // Market cap history
+  STATE.mcapHist = buildMarketCapHistory(STATE.monthly.dates, STATE.monthly.prices, STATE.tickers, STATE.marketCaps);
+
+  // Build portfolios
+  STATE.portfolios = buildSizePortfolios(STATE.monthly, STATE.mcapHist, STATE.tickers);
+
+  // Metrics
+  const rf = getRfAnnual();
+  STATE.metrics = calcAllMetrics(STATE.portfolios, rf);
+
+  // Update UI
+  updateSubtitle();
+  setDataStatusLine();
+  updateMcapSourceLabel();
+
+  renderUniverseTable(aligned.integrity);
+  renderMcapTable(STATE.mcapHist);
+  renderHoldingsTable(STATE.portfolios.holdingsLatest);
+  renderMetricsTable(STATE.metrics);
+  renderKPIs(STATE.metrics);
+  buildDiscussion(STATE.metrics);
+
+  // Charts
+  renderAllCharts(aligned.integrity);
+}
+
+/** =========================================================
+    Events: Uploads, Auto-fetch, Export, Reset
+   ========================================================= */
+
+async function handleRun(){
+  document.getElementById("runNote").textContent = "Running…";
+  try{
+    if(!STATE.daily.dates.length || !STATE.tickers.length){
+      // fallback to demo if nothing loaded
+      loadDemo();
+    }
+    applyDateInputs(STATE.daily.dates);
+    // Ensure date inputs exist and are within range
+    runFullPipeline();
+    document.getElementById("runNote").textContent = "Done.";
+  }catch(e){
+    console.error(e);
+    document.getElementById("runNote").textContent = "Error: " + (e.message||String(e));
+  }
+}
+
+function loadDemo(){
+  STATE.mode = "DEMO";
+  STATE.companies = {...DEMO.companies};
+  STATE.tickers = DEMO.tickers.slice();
+  STATE.daily.dates = DEMO.dates.slice();
+  STATE.daily.prices = JSON.parse(JSON.stringify(DEMO.prices));
+  STATE.marketCaps = {...DEMO.marketCaps};
+  STATE.sources.mcap = "DEMO DATA";
+  STATE.ui.stockVisible = {};
+  // In demo, enable 2 stocks by default
+  STATE.ui.stockVisible[STATE.tickers[0]] = true;
+  STATE.ui.stockVisible[STATE.tickers[1]] = true;
+
+  document.getElementById("corsWarning").style.display = "none";
+  setDataStatusLine();
+  updateSubtitle();
+  applyDateInputs(STATE.daily.dates);
+}
+
+async function handleTickersUpload(file){
+  const rows = await parseCSVFile(file);
+  const col = rows.length ? Object.keys(rows[0])[0] : "Ticker";
+  const tks = rows.map(r=>String(r[col]??"").trim().toUpperCase()).filter(Boolean);
+  STATE.tickers = unique(tks);
+}
+
+async function handleWidePricesUpload(file){
+  const rows = await parseCSVFile(file);
+  const parsed = parsePricesWide(rows);
+  STATE.daily.dates = parsed.dates;
+  STATE.daily.prices = parsed.prices;
+  // if tickers list was uploaded, intersect; else use parsed tickers
+  const tks = STATE.tickers.length ? STATE.tickers : parsed.tickers;
+  STATE.tickers = tks.filter(t=>parsed.tickers.includes(t));
+  STATE.mode = "UPLOAD";
+  setDataStatusLine();
+  applyDateInputs(STATE.daily.dates);
+}
+
+async function handleMultiPricesUpload(files){
+  const filesData = [];
+  for(const f of files){
+    const rows = await parseCSVFile(f);
+    filesData.push({name:f.name, rows});
+  }
+  const merged = parsePricesPerTicker(filesData);
+  STATE.daily.dates = merged.dates;
+  STATE.daily.prices = merged.prices;
+  const tks = STATE.tickers.length ? STATE.tickers : merged.tickers;
+  STATE.tickers = tks.filter(t=>merged.tickers.includes(t));
+  STATE.mode = "UPLOAD";
+  setDataStatusLine();
+  applyDateInputs(STATE.daily.dates);
+}
+
+async function handleMcapUpload(file){
+  const rows = await parseCSVFile(file);
+  STATE.marketCaps = parseMarketCapsCSV(rows);
+  STATE.sources.mcap = "Uploaded market cap CSV";
+  updateMcapSourceLabel();
+}
+
+function handleMcapHtmlPaste(){
+  const html = document.getElementById("mcapHtmlPaste").value || "";
+  const caps = parseDividendMaxHTMLTable(html);
+  if(Object.keys(caps).length){
+    STATE.marketCaps = caps;
+    STATE.sources.mcap = "Pasted DividendMax HTML table";
+    updateMcapSourceLabel();
+  }else{
+    alert("Could not parse market caps from pasted HTML. Please upload a MarketCap CSV instead.");
+  }
+}
+
+async function handleAutoFetch(){
+  document.getElementById("autofetchNote").textContent = "Fetching… (best effort; may be blocked by CORS)";
+  document.getElementById("corsWarning").style.display = "none";
+
+  try{
+    STATE.mode = "AUTO";
+    // use uploaded tickers list if exists else default
+    if(!STATE.tickers.length) STATE.tickers = DEFAULT_DOW_30.slice();
+
+    const merged = await tryFetchYahooPrices(STATE.tickers);
+    STATE.daily.dates = merged.dates;
+    STATE.daily.prices = merged.prices;
+    STATE.tickers = merged.tickers;
+
+    try{
+      const caps = await tryScrapeDividendMax();
+      STATE.marketCaps = caps;
+      STATE.sources.mcap = "DividendMax (scraped)";
+    }catch(e){
+      // fallback: no caps
+      STATE.sources.mcap = "Market cap missing (upload required)";
+      STATE.warnings.push("DividendMax scraping failed; please upload MarketCap CSV.");
+    }
+
+    setDataStatusLine();
+    applyDateInputs(STATE.daily.dates);
+
+    document.getElementById("autofetchNote").textContent = "Auto-fetch succeeded. Run analysis.";
+  }catch(e){
+    console.warn("Auto-fetch failed:", e);
+    STATE.mode = "UPLOAD";
+    document.getElementById("corsWarning").style.display = "block";
+    document.getElementById("autofetchNote").textContent = "Auto-fetch failed (likely CORS). Please upload data or use demo.";
+    setDataStatusLine();
+  }
+}
+
+function handleExportMetrics(){
+  if(!STATE.metrics || !Object.keys(STATE.metrics).length){
+    alert("No metrics to export yet. Run analysis first.");
+    return;
+  }
+  const rows = [];
+  rows.push(["Portfolio","AnnReturn","AnnVol","Sharpe","Skew","KurtosisExcess","MaxDrawdown","Sortino","Calmar"].join(","));
+  const order = ["Low-size","High-size","Long-short","Equal-weight"];
+  for(const k of order){
+    const m = STATE.metrics[k];
+    rows.push([
+      k,
+      m.annRet, m.annVol, m.sharpe, m.skew, m.kurt, m.mdd, m.sortino, m.calmar
+    ].join(","));
+  }
+  downloadText("size_factor_metrics.csv", rows.join("\n"));
+}
+
+function handleReset(){
+  loadDemo();
+  handleRun();
+}
+
+/** =========================================================
+    Initialize
+   ========================================================= */
+
+function wireEvents(){
+  document.getElementById("runBtn").addEventListener("click", handleRun);
+  document.getElementById("autofetchBtn").addEventListener("click", handleAutoFetch);
+  document.getElementById("exportMetricsBtn").addEventListener("click", handleExportMetrics);
+  document.getElementById("resetBtn").addEventListener("click", handleReset);
+  document.getElementById("parseMcapHtmlBtn").addEventListener("click", handleMcapHtmlPaste);
+  document.getElementById("recomputeBtn").addEventListener("click", ()=>{
+    runFullPipeline();
+  });
+
+  document.getElementById("rfInput").addEventListener("change", ()=>{
+    if(STATE.portfolios.dates.length){
+      runFullPipeline();
+    }
+  });
+  document.getElementById("dateStart").addEventListener("change", ()=>{
+    if(STATE.daily.dates.length){
+      runFullPipeline();
+    }
+  });
+  document.getElementById("dateEnd").addEventListener("change", ()=>{
+    if(STATE.daily.dates.length){
+      runFullPipeline();
+    }
+  });
+
+  document.getElementById("tickersFile").addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0];
+    if(!f) return;
+    try{
+      await handleTickersUpload(f);
+      document.getElementById("runNote").textContent = `Tickers loaded: ${STATE.tickers.length}.`;
+    }catch(err){
+      alert("Ticker list parse error: " + (err.message||String(err)));
+    }
+  });
+
+  document.getElementById("pricesWideFile").addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0];
+    if(!f) return;
+    try{
+      await handleWidePricesUpload(f);
+      document.getElementById("runNote").textContent = `Prices loaded (wide). Dates: ${STATE.daily.dates.length}, tickers: ${STATE.tickers.length}.`;
+    }catch(err){
+      alert("Prices (wide) parse error: " + (err.message||String(err)));
+    }
+  });
+
+  document.getElementById("pricesMultiFiles").addEventListener("change", async (e)=>{
+    const files = Array.from(e.target.files||[]);
+    if(!files.length) return;
+    try{
+      await handleMultiPricesUpload(files);
+      document.getElementById("runNote").textContent = `Prices loaded (multi). Dates: ${STATE.daily.dates.length}, tickers: ${STATE.tickers.length}.`;
+    }catch(err){
+      alert("Prices (multi) parse error: " + (err.message||String(err)));
+    }
+  });
+
+  document.getElementById("mcapFile").addEventListener("change", async (e)=>{
+    const f = e.target.files?.[0];
+    if(!f) return;
+    try{
+      await handleMcapUpload(f);
+      document.getElementById("runNote").textContent = `Market caps loaded: ${Object.keys(STATE.marketCaps).length}.`;
+    }catch(err){
+      alert("Market cap parse error: " + (err.message||String(err)));
+    }
+  });
+}
+
+(function init(){
+  wireEvents();
+  // start in DEMO and render immediately
+  loadDemo();
+  handleRun();
+})();
+</script>
+</body>
+</html>
